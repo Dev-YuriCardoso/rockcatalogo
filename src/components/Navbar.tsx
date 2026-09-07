@@ -1,43 +1,45 @@
-import { Link, useRouterState } from "@tanstack/react-router";
+import { Link } from "@tanstack/react-router";
 import { Skull, Menu, X } from "lucide-react";
 import { useState } from "react";
 import { CATEGORIAS } from "@/data/products";
 
-const LINKS = [
-  ...CATEGORIAS.map((c) => ({ label: c, to: "/catalogo" as const, categoria: c })),
-  { label: "Looks Completos", to: "/" as const, categoria: undefined as string | undefined },
-];
+const linkClass =
+  "text-sm font-medium text-muted-foreground transition-colors hover:text-foreground";
 
 export function Navbar() {
   const [open, setOpen] = useState(false);
-  const pathname = useRouterState({ select: (s) => s.location.pathname });
 
   return (
     <header className="fixed top-0 inset-x-0 z-50 border-b border-border bg-background/90 backdrop-blur">
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4">
-        <Link to="/" className="flex items-center gap-2 font-display text-xl font-bold uppercase tracking-widest text-foreground">
+        <Link
+          to="/"
+          className="flex items-center gap-2 font-display text-xl font-bold uppercase tracking-widest text-foreground"
+        >
           <Skull className="h-6 w-6 text-primary" />
           Rock<span className="text-primary">/</span>Catalog
         </Link>
 
         <nav className="hidden items-center gap-6 md:flex">
-          {LINKS.map((l) => (
+          {CATEGORIAS.map((c) => (
             <Link
-              key={l.label}
-              to={l.to}
-              {...(l.categoria ? { search: { categoria: l.categoria } } : {})}
-              hash={l.label === "Looks Completos" ? "looks" : undefined}
-              className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+              key={c}
+              to="/catalogo"
+              search={{ categoria: c }}
+              className={linkClass}
               activeProps={{ className: "text-primary" }}
-              activeOptions={{ exact: l.to === "/" }}
+              activeOptions={{ includeSearch: true, exact: true }}
             >
-              {l.label}
+              {c}
             </Link>
           ))}
+          <Link to="/" hash="looks" className={linkClass}>
+            Looks Completos
+          </Link>
           <Link
             to="/catalogo"
             search={{ categoria: "Todas" }}
-            className={`rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/80 ${pathname === "/catalogo" ? "" : ""}`}
+            className="rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/80"
           >
             Catálogo
           </Link>
@@ -50,18 +52,20 @@ export function Navbar() {
 
       {open && (
         <nav className="border-t border-border bg-background px-4 py-4 md:hidden flex flex-col gap-3">
-          {LINKS.map((l) => (
+          {CATEGORIAS.map((c) => (
             <Link
-              key={l.label}
-              to={l.to}
-              {...(l.categoria ? { search: { categoria: l.categoria } } : {})}
-              hash={l.label === "Looks Completos" ? "looks" : undefined}
+              key={c}
+              to="/catalogo"
+              search={{ categoria: c }}
               onClick={() => setOpen(false)}
-              className="text-sm font-medium text-muted-foreground hover:text-foreground"
+              className={linkClass}
             >
-              {l.label}
+              {c}
             </Link>
           ))}
+          <Link to="/" hash="looks" onClick={() => setOpen(false)} className={linkClass}>
+            Looks Completos
+          </Link>
           <Link
             to="/catalogo"
             search={{ categoria: "Todas" }}
