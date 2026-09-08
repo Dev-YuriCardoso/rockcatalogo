@@ -6,19 +6,27 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 
 export const Route = createFileRoute("/login")({
+  head: () => ({
+    meta: [
+      { title: "Entrar | Rock/Catalog" },
+      { name: "description", content: "Acesso restrito ao painel do catálogo Rock/Catalog." },
+      { property: "og:title", content: "Entrar | Rock/Catalog" },
+      { property: "og:description", content: "Acesso restrito ao painel do catálogo Rock/Catalog." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
+    ],
+  }),
   component: Login,
 });
 
 function Login() {
-  const { session, login, register } = useSession();
+  const { session, login } = useSession();
   const navigate = useNavigate();
 
-  const [mode, setMode] = useState<"login" | "register">("login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [notice, setNotice] = useState<string | null>(null);
 
   if (session.status === "authenticated") {
     return (
@@ -47,24 +55,13 @@ function Login() {
   const handleSubmit = async () => {
     setLoading(true);
     setError(null);
-    setNotice(null);
-    const res = mode === "login"
-      ? await login(email.trim(), password)
-      : await register(email.trim(), password);
+    const res = await login(email.trim(), password);
+    setLoading(false);
 
     if (!res.ok) {
-      setError(res.error ?? "Algo deu errado.");
-      setLoading(false);
+      setError(res.error ?? "Credenciais inválidas.");
       return;
     }
-
-    if (res.confirmationRequired) {
-      setNotice("Conta criada! Confirme pelo e-mail antes de entrar (ou desative a confirmação no Supabase).");
-      setLoading(false);
-      return;
-    }
-
-    setLoading(false);
     navigate({ to: "/admin" });
   };
 
@@ -76,18 +73,13 @@ function Login() {
             Rock<span className="text-primary">/</span>Catalog
           </CardTitle>
           <CardDescription className="text-center">
-            {mode === "login" ? "Entre para administrar o catálogo." : "Crie sua conta para administrar o catálogo."}
+            Entre para administrar o catálogo.
           </CardDescription>
         </CardHeader>
         <CardContent className="flex flex-col gap-4">
           {error && (
             <p className="rounded-md border border-destructive bg-destructive/10 px-3 py-2 text-sm text-destructive">
               {error}
-            </p>
-          )}
-          {notice && (
-            <p className="rounded-md border border-border bg-card px-3 py-2 text-sm text-muted-foreground">
-              {notice}
             </p>
           )}
 
@@ -97,7 +89,7 @@ function Login() {
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="voce@exemplo.com"
+              placeholder="admin@admin.com"
               autoComplete="email"
             />
           </label>
@@ -108,26 +100,17 @@ function Login() {
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && email && password && !loading) void handleSubmit();
+              }}
               placeholder="••••••••"
-              autoComplete={mode === "login" ? "current-password" : "new-password"}
+              autoComplete="current-password"
             />
           </label>
 
           <Button onClick={handleSubmit} disabled={loading || !email || !password} className="w-full">
-            {loading ? "Processando…" : mode === "login" ? "Entrar" : "Criar conta"}
+            {loading ? "Processando…" : "Entrar"}
           </Button>
-
-          <button
-            type="button"
-            onClick={() => {
-              setMode(mode === "login" ? "register" : "login");
-              setError(null);
-              setNotice(null);
-            }}
-            className="text-sm text-primary hover:underline"
-          >
-            {mode === "login" ? "Não tem conta? Cadastre-se" : "Já tem conta? Entrar"}
-          </button>
         </CardContent>
       </Card>
     </div>
