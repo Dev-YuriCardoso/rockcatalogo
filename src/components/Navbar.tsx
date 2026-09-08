@@ -50,9 +50,9 @@ export function Navbar() {
               <button
                 type="button"
                 onClick={() => void logout()}
-                className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+                className={linkClass}
               >
-                Salir
+                Sair
               </button>
             </>
           ) : (
@@ -61,7 +61,7 @@ export function Navbar() {
               className={linkClass}
               activeProps={{ className: "text-primary" }}
             >
-              Iniciar sesión
+              Entrar
             </Link>
           )}
           <Link
@@ -105,14 +105,14 @@ export function Navbar() {
                   setOpen(false);
                   void logout();
                 }}
-                className={linkClass}
+                className={`${linkClass} text-left`}
               >
-                Salir
+                Sair
               </button>
             </>
           ) : (
             <Link to="/login" onClick={() => setOpen(false)} className={linkClass}>
-              Iniciar sesión
+              Entrar
             </Link>
           )}
           <Link

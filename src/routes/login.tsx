@@ -25,18 +25,18 @@ function Login() {
       <div className="mx-auto max-w-md px-4 pt-24">
         <Card>
           <CardHeader>
-            <CardTitle>Sesión iniciada</CardTitle>
-            <CardDescription>Ya estás autenticado.</CardDescription>
+            <CardTitle>Sessão iniciada</CardTitle>
+            <CardDescription>Você já está autenticado.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
             <p className="text-sm text-muted-foreground">
-              Sesión de <span className="text-foreground">{session.user.email}</span>.
+              Sessão de <span className="text-foreground">{session.user.email}</span>.
             </p>
             <Link
               to="/admin"
               className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/80"
             >
-              Ir al panel
+              Ir para o painel
             </Link>
           </CardContent>
         </Card>
@@ -53,13 +53,13 @@ function Login() {
       : await register(email.trim(), password);
 
     if (!res.ok) {
-      setError(res.error ?? "Algo salió mal.");
+      setError(res.error ?? "Algo deu errado.");
       setLoading(false);
       return;
     }
 
     if (res.confirmationRequired) {
-      setNotice("Revisa tu correo para confirmar la cuenta antes de iniciar sesión.");
+      setNotice("Conta criada! Confirme pelo e-mail antes de entrar (ou desative a confirmação no Supabase).");
       setLoading(false);
       return;
     }
@@ -76,7 +76,7 @@ function Login() {
             Rock<span className="text-primary">/</span>Catalog
           </CardTitle>
           <CardDescription className="text-center">
-            {mode === "login" ? "Inicia sesión para administrar el catálogo." : "Crea tu cuenta para administrar el catálogo."}
+            {mode === "login" ? "Entre para administrar o catálogo." : "Crie sua conta para administrar o catálogo."}
           </CardDescription>
         </CardHeader>
         <CardContent className="flex flex-col gap-4">
@@ -92,18 +92,18 @@ function Login() {
           )}
 
           <label className="flex flex-col gap-1.5 text-sm font-medium text-foreground">
-            Correo
+            E-mail
             <Input
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="tucorreo@ejemplo.com"
+              placeholder="voce@exemplo.com"
               autoComplete="email"
             />
           </label>
 
           <label className="flex flex-col gap-1.5 text-sm font-medium text-foreground">
-            Contraseña
+            Senha
             <Input
               type="password"
               value={password}
@@ -114,7 +114,7 @@ function Login() {
           </label>
 
           <Button onClick={handleSubmit} disabled={loading || !email || !password} className="w-full">
-            {loading ? "Procesando…" : mode === "login" ? "Iniciar sesión" : "Crear cuenta"}
+            {loading ? "Processando…" : mode === "login" ? "Entrar" : "Criar conta"}
           </Button>
 
           <button
@@ -126,7 +126,7 @@ function Login() {
             }}
             className="text-sm text-primary hover:underline"
           >
-            {mode === "login" ? "¿No tienes cuenta? Regístrate" : "¿Ya tienes cuenta? Inicia sesión"}
+            {mode === "login" ? "Não tem conta? Cadastre-se" : "Já tem conta? Entrar"}
           </button>
         </CardContent>
       </Card>

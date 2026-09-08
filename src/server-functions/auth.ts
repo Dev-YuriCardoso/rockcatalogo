@@ -82,7 +82,7 @@ export const signIn = createServerFn({ method: "POST" })
       setResponseStatus(USER_ERROR_STATUS);
       return {
         ok: false as const,
-        error: error?.message ?? "Credenciales inválidas.",
+        error: error?.message ?? "Credenciais inválidas.",
       };
     }
 
