@@ -13,6 +13,7 @@ import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
+import { SessionProvider } from "@/lib/session-state";
 
 function NotFoundComponent() {
   return (
@@ -122,13 +123,15 @@ function RootComponent() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <div className="flex min-h-screen flex-col bg-background">
-        <Navbar />
-        <main className="flex-1 pt-16">
-          <Outlet />
-        </main>
-        <Footer />
-      </div>
+      <SessionProvider>
+        <div className="flex min-h-screen flex-col bg-background">
+          <Navbar />
+          <main className="flex-1 pt-16">
+            <Outlet />
+          </main>
+          <Footer />
+        </div>
+      </SessionProvider>
     </QueryClientProvider>
   );
 }

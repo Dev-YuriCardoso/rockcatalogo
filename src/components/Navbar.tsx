@@ -2,12 +2,14 @@ import { Link } from "@tanstack/react-router";
 import { Skull, Menu, X } from "lucide-react";
 import { useState } from "react";
 import { CATEGORIAS } from "@/data/products";
+import { useSession } from "@/lib/session-state";
 
 const linkClass =
   "text-sm font-medium text-muted-foreground transition-colors hover:text-foreground";
 
 export function Navbar() {
   const [open, setOpen] = useState(false);
+  const { session, logout } = useSession();
 
   return (
     <header className="fixed top-0 inset-x-0 z-50 border-b border-border bg-background/90 backdrop-blur">
@@ -36,6 +38,32 @@ export function Navbar() {
           <Link to="/" hash="looks" className={linkClass}>
             Looks Completos
           </Link>
+          {session.status === "authenticated" ? (
+            <>
+              <Link
+                to="/admin"
+                className={linkClass}
+                activeProps={{ className: "text-primary" }}
+              >
+                Admin
+              </Link>
+              <button
+                type="button"
+                onClick={() => void logout()}
+                className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+              >
+                Salir
+              </button>
+            </>
+          ) : (
+            <Link
+              to="/login"
+              className={linkClass}
+              activeProps={{ className: "text-primary" }}
+            >
+              Iniciar sesión
+            </Link>
+          )}
           <Link
             to="/catalogo"
             search={{ categoria: "Todas" }}
@@ -66,6 +94,27 @@ export function Navbar() {
           <Link to="/" hash="looks" onClick={() => setOpen(false)} className={linkClass}>
             Looks Completos
           </Link>
+          {session.status === "authenticated" ? (
+            <>
+              <Link to="/admin" onClick={() => setOpen(false)} className={linkClass}>
+                Admin
+              </Link>
+              <button
+                type="button"
+                onClick={() => {
+                  setOpen(false);
+                  void logout();
+                }}
+                className={linkClass}
+              >
+                Salir
+              </button>
+            </>
+          ) : (
+            <Link to="/login" onClick={() => setOpen(false)} className={linkClass}>
+              Iniciar sesión
+            </Link>
+          )}
           <Link
             to="/catalogo"
             search={{ categoria: "Todas" }}
