@@ -30,40 +30,6 @@ function toPublicUser(user: {
   };
 }
 
-export const signUp = createServerFn({ method: "POST" })
-  .validator(
-    z.object({
-      email: z.string().email(),
-      password: z.string().min(8),
-    }),
-  )
-  .handler(async ({ data }) => {
-    const supabase = createSupabaseClient();
-    const { data: result, error } = await supabase.auth.signUp({
-      email: data.email,
-      password: data.password,
-    });
-
-    if (error) {
-      setResponseStatus(USER_ERROR_STATUS);
-      return { ok: false as const, error: error.message };
-    }
-
-    if (result.session) {
-      writeSessionCookie({
-        access_token: result.session.access_token,
-        refresh_token: result.session.refresh_token,
-        expires_at: result.session.expires_at,
-      });
-    }
-
-    return {
-      ok: true as const,
-      user: toPublicUser(result.user ?? { id: "" }),
-      confirmationRequired: !result.session,
-    };
-  });
-
 export const signIn = createServerFn({ method: "POST" })
   .validator(
     z.object({
