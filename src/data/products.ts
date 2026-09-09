@@ -10,25 +10,43 @@ export const CATEGORIAS: Categoria[] = ["Acessórios", "Camisas", "Calças", "Mo
 export interface Produto {
   id: string;
   titulo: string;
-  categoria: Categoria;
+  categoria: string;
   preco: string;
   imagem: string;
   link: string;
 }
 
-const SHOPEE = "https://shopee.com.br";
+/** Imagem usada quando o produto cadastrado não tem foto própria. */
+export const IMAGENS_PADRAO: Record<string, string> = {
+  Acessórios: acessorios,
+  Camisas: camisa,
+  Calças: calca,
+  Mochilas: mochila,
+};
 
-export const PRODUTOS: Produto[] = [
-  { id: "c1", titulo: "Camiseta Banda Doom — Estampa Caveira", categoria: "Camisas", preco: "R$ 79,90", imagem: camisa, link: SHOPEE },
-  { id: "c2", titulo: "Camiseta Preta Oversized Gothic Print", categoria: "Camisas", preco: "R$ 69,90", imagem: camisa, link: SHOPEE },
-  { id: "c3", titulo: "Camiseta Thrash Metal Vintage Lavada", categoria: "Camisas", preco: "R$ 89,90", imagem: camisa, link: SHOPEE },
-  { id: "a1", titulo: "Pulseira de Couro com Espinhos", categoria: "Acessórios", preco: "R$ 34,90", imagem: acessorios, link: SHOPEE },
-  { id: "a2", titulo: "Colar Corrente Prata Punk", categoria: "Acessórios", preco: "R$ 29,90", imagem: acessorios, link: SHOPEE },
-  { id: "a3", titulo: "Kit Anéis Caveira Aço Inox", categoria: "Acessórios", preco: "R$ 44,90", imagem: acessorios, link: SHOPEE },
-  { id: "p1", titulo: "Calça Jeans Skinny Rasgada Preta", categoria: "Calças", preco: "R$ 119,90", imagem: calca, link: SHOPEE },
-  { id: "p2", titulo: "Calça Cargo Preta com Correntes", categoria: "Calças", preco: "R$ 139,90", imagem: calca, link: SHOPEE },
-  { id: "p3", titulo: "Calça Bondage Straps Rock", categoria: "Calças", preco: "R$ 149,90", imagem: calca, link: SHOPEE },
-  { id: "m1", titulo: "Mochila Couro com Rebites Punk", categoria: "Mochilas", preco: "R$ 189,90", imagem: mochila, link: SHOPEE },
-  { id: "m2", titulo: "Mochila Preta Tática Street Rock", categoria: "Mochilas", preco: "R$ 159,90", imagem: mochila, link: SHOPEE },
-  { id: "m3", titulo: "Mochila Mini Spikes Gothic", categoria: "Mochilas", preco: "R$ 129,90", imagem: mochila, link: SHOPEE },
-];
+export function formatarPreco(valor: number): string {
+  return valor.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+}
+
+export type ProdutoRow = {
+  id: string;
+  title: string;
+  description: string | null;
+  category: string;
+  price: number;
+  image_url: string | null;
+  shopee_affiliate_link: string | null;
+  created_at: string;
+};
+
+/** Converte uma linha do banco no formato usado pelos cards. */
+export function toProduto(row: ProdutoRow): Produto {
+  return {
+    id: row.id,
+    titulo: row.title,
+    categoria: row.category,
+    preco: formatarPreco(Number(row.price) || 0),
+    imagem: row.image_url || IMAGENS_PADRAO[row.category] || camisa,
+    link: row.shopee_affiliate_link || "https://shopee.com.br",
+  };
+}
