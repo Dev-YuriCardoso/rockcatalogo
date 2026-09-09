@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useCallback, useEffect, useState } from "react";
 import { useSession } from "@/lib/session-state";
 import { addProduct, listProducts, deleteProduct, type AdminProduct } from "@/server-functions/products";
+import { fetchShopeeProduct, importShopeeProduct } from "@/server-functions/shopee";
 import { CATEGORIAS } from "@/data/products";
 import { ProductCard } from "@/components/ProductCard";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -19,7 +20,7 @@ import camisaImg from "@/assets/camisa.jpg";
 import acessoriosImg from "@/assets/acessorios.jpg";
 import calcaImg from "@/assets/calca.jpg";
 import mochilaImg from "@/assets/mochila.jpg";
-import { ExternalLink, Trash2, RefreshCw } from "lucide-react";
+import { ExternalLink, Trash2, RefreshCw, Search, Sparkles } from "lucide-react";
 
 export const Route = createFileRoute("/admin")({
   component: Admin,
@@ -42,6 +43,13 @@ const FALLBACK_IMGS: Record<Categoria, string> = {
   Acessórios: acessoriosImg,
   Calças: calcaImg,
   Mochilas: mochilaImg,
+};
+
+const SOURCE_LABEL: Record<string, string> = {
+  pagina: "página del producto",
+  metadatos: "metadatos (OpenGraph)",
+  lector: "lector web",
+  "": "no disponibles",
 };
 
 function formatPrice(price: number): string {
@@ -70,6 +78,10 @@ function Admin() {
   const [message, setMessage] = useState<{ kind: "ok" | "error"; text: string } | null>(null);
   const [products, setProducts] = useState<AdminProduct[]>([]);
   const [listLoading, setListLoading] = useState(false);
+  const [shopeeLink, setShopeeLink] = useState("");
+  const [fetching, setFetching] = useState(false);
+  const [savingAuto, setSavingAuto] = useState(false);
+  const [extracted, setExtracted] = useState<{ source: string; warnings: string[] } | null>(null);
 
   const loadProducts = useCallback(async () => {
     setListLoading(true);
@@ -164,6 +176,69 @@ function Admin() {
     }
   };
 
+  const handleFetch = async () => {
+    const link = normalizeUrl(shopeeLink);
+    if (!link) {
+      setMessage({ kind: "error", text: "Pega o link do produto da Shopee primeiro." });
+      return;
+    }
+    setFetching(true);
+    setMessage(null);
+    const res = await fetchShopeeProduct({ data: { link } });
+    setFetching(false);
+
+    if (res.ok) {
+      setExtracted({ source: res.source ?? "", warnings: res.warnings ?? [] });
+      setForm((f) => ({
+        ...f,
+        title: res.title || f.title,
+        description: res.description || f.description,
+        category: res.category || f.category,
+        price: res.price != null ? String(res.price) : f.price,
+        imageUrl: res.imageUrl || f.imageUrl,
+        link,
+      }));
+      const warnings = res.warnings ?? [];
+      if (warnings.length > 0) {
+        setMessage({ kind: "error", text: warnings.join(" ") });
+      } else {
+        setMessage({
+          kind: "ok",
+          text: `Dados obtidos (${SOURCE_LABEL[res.source ?? ""] ?? res.source}). Revisa e guarda abaixo, ou usa "Importar e publicar".`,
+        });
+      }
+    } else {
+      setMessage({ kind: "error", text: res.error });
+    }
+  };
+
+  const handleAutoImport = async () => {
+    const link = normalizeUrl(shopeeLink);
+    if (!link) {
+      setMessage({ kind: "error", text: "Pega o link do produto da Shopee primeiro." });
+      return;
+    }
+    setSavingAuto(true);
+    setMessage(null);
+    const res = await importShopeeProduct({ data: { link } });
+    setSavingAuto(false);
+
+    if (res.ok) {
+      setMessage({
+        kind: "ok",
+        text: (res.warnings ?? []).length > 0
+          ? `Produto importado e publicado. ${(res.warnings ?? []).join(" ")}`
+          : "Produto importado e publicado automaticamente desde Shopee. ✅",
+      });
+      setShopeeLink("");
+      setForm({ ...EMPTY });
+      setExtracted(null);
+      void loadProducts();
+    } else {
+      setMessage({ kind: "error", text: res.error });
+    }
+  };
+
   return (
     <div className="mx-auto max-w-5xl px-4 pt-20">
       <h1 className="text-3xl font-bold uppercase text-foreground">Painel do administrador</h1>
@@ -182,6 +257,58 @@ function Admin() {
           {message.text}
         </p>
       )}
+
+      {/* Importação automática desde Shopee */}
+      <div className="mt-6">
+        <Card>
+          <CardHeader>
+            <CardTitle>Importar desde Shopee (automático)</CardTitle>
+            <CardDescription>
+              Cola o link do produto da Shopee (ou o link de afiliado s.shopee.com.br/…) e o sistema busca o nome,
+              preço, descrição e foto, guarda tudo no Supabase e publica o produto no catálogo.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="flex flex-col gap-3">
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="shp-link">Link do produto na Shopee</Label>
+              <Input
+                id="shp-link"
+                type="url"
+                value={shopeeLink}
+                onChange={(e) => setShopeeLink(e.target.value)}
+                placeholder="https://shopee.com.br/… ou https://s.shopee.com.br/…"
+                disabled={fetching || savingAuto}
+              />
+            </div>
+
+            <div className="flex flex-wrap items-center gap-3">
+              <Button
+                variant="outline"
+                onClick={() => void handleFetch()}
+                disabled={fetching || savingAuto || shopeeLink.trim() === ""}
+              >
+                <Search className="h-4 w-4" />
+                {fetching ? "Buscando…" : "Obter dados"}
+              </Button>
+
+              <Button
+                onClick={() => void handleAutoImport()}
+                disabled={fetching || savingAuto || shopeeLink.trim() === ""}
+              >
+                <Sparkles className="h-4 w-4" />
+                {savingAuto ? "Importando…" : "Importar e publicar (todo automático)"}
+              </Button>
+            </div>
+
+            {extracted && !fetching && (
+              <p className="rounded-md border border-border bg-card px-3 py-2 text-xs text-muted-foreground">
+                Última busca: datos {(SOURCE_LABEL[extracted.source] ?? extracted.source) || "no disponibles"} — já
+                preencheram o formulário abaixo. Revisa e guarda, ou usa "Importar e publicar".
+              </p>
+            )}
+          </CardContent>
+        </Card>
+      </div>
 
       <div className="mt-6 grid gap-6 lg:grid-cols-[1fr_280px]">
         {/* Formulário */}
