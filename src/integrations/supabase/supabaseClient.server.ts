@@ -32,21 +32,17 @@ function createSupabaseFetch(supabaseKey: string): typeof fetch {
   };
 }
 
+// The app points at the project owner's own Supabase project. The publishable
+// key is safe to keep in source; the service role key never appears here.
+export const EXTERNAL_SUPABASE_URL = "https://fmukrilkngrqjvjnvftf.supabase.co";
+export const EXTERNAL_SUPABASE_PUBLISHABLE_KEY =
+  "sb_publishable_lWmWHtsjKdSeyig_-7gZXA_dsWC9YZ7";
+
 function getServerEnv() {
-  const SUPABASE_URL = process.env["SUPABASE_URL"];
-  const SUPABASE_PUBLISHABLE_KEY = process.env["SUPABASE_PUBLISHABLE_KEY"];
-
-  if (!SUPABASE_URL || !SUPABASE_PUBLISHABLE_KEY) {
-    const missing = [
-      ...(!SUPABASE_URL ? ["SUPABASE_URL"] : []),
-      ...(!SUPABASE_PUBLISHABLE_KEY ? ["SUPABASE_PUBLISHABLE_KEY"] : []),
-    ];
-    throw new Error(
-      `[Supabase] Missing server environment variable(s): ${missing.join(", ")}.`,
-    );
-  }
-
-  return { SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY };
+  return {
+    SUPABASE_URL: EXTERNAL_SUPABASE_URL,
+    SUPABASE_PUBLISHABLE_KEY: EXTERNAL_SUPABASE_PUBLISHABLE_KEY,
+  };
 }
 
 /**
