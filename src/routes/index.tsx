@@ -1,8 +1,10 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
 import heroImg from "@/assets/hero.jpg";
-import { LOOKS, LookCard } from "@/components/LookCard";
-import { PRODUTOS } from "@/data/products";
+import { LookCard, type Look } from "@/components/LookCard";
+import { toProduto, type Produto } from "@/data/products";
 import { ProductCard } from "@/components/ProductCard";
+import { listLooks, listProducts, type AdminLook } from "@/server-functions/products";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -18,8 +20,28 @@ export const Route = createFileRoute("/")({
   component: Index,
 });
 
+function toLook(row: AdminLook): Look {
+  return {
+    id: row.id,
+    title: row.title,
+    description: row.description,
+    image_url: row.image_url,
+    shopee_affiliate_link: row.shopee_affiliate_link,
+  };
+}
+
 function Index() {
-  const destaques = PRODUTOS.slice(0, 4);
+  const [destaques, setDestaques] = useState<Produto[]>([]);
+  const [looks, setLooks] = useState<Look[]>([]);
+
+  useEffect(() => {
+    void listProducts().then((res) => {
+      if (res.ok) setDestaques((res.products ?? []).map(toProduto).slice(0, 4));
+    });
+    void listLooks().then((res) => {
+      if (res.ok) setLooks((res.looks ?? []).map(toLook));
+    });
+  }, []);
 
   return (
     <div>
@@ -58,6 +80,9 @@ function Index() {
             <ProductCard key={p.id} produto={p} />
           ))}
         </div>
+        {destaques.length === 0 && (
+          <p className="mt-6 text-sm text-muted-foreground">Aún no hay productos destacados — revisa el catálogo.</p>
+        )}
       </section>
 
       {/* Looks Completos */}
@@ -66,10 +91,13 @@ function Index() {
           <p className="mb-2 text-sm font-semibold uppercase tracking-[0.3em] text-primary">Pronto pra vestir</p>
           <h2 className="mb-8 text-3xl font-bold uppercase text-foreground md:text-4xl">Looks Completos</h2>
           <div className="grid gap-6 md:grid-cols-2">
-            {LOOKS.map((look) => (
+            {looks.map((look) => (
               <LookCard key={look.id} look={look} />
             ))}
           </div>
+          {looks.length === 0 && (
+            <p className="mt-6 text-sm text-muted-foreground">Aún no hay looks completos publicados.</p>
+          )}
         </div>
       </section>
     </div>

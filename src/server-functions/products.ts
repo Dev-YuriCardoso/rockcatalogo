@@ -142,3 +142,47 @@ export const deleteProduct = createServerFn({ method: "POST" })
     writeSessionCookie(fresh);
     return { ok: true as const };
   });
+
+export type AdminLook = {
+  id: string;
+  title: string;
+  description: string | null;
+  image_url: string | null;
+  shopee_affiliate_link: string | null;
+  created_at: string;
+};
+
+const LOOK_COLUMNS = "id,title,description,image_url,shopee_affiliate_link,created_at";
+
+/** Public read of the curated "looks completos" (anonymous GET + session fallback). */
+export const listLooks = createServerFn({ method: "GET" }).handler(async () => {
+  const session = readSessionCookie();
+  if (session) {
+    try {
+      const { client, session: fresh } = await createSupabaseClientWithSession(session);
+      const { data, error } = await client
+        .from("looks")
+        .select(LOOK_COLUMNS)
+        .order("created_at", { ascending: false });
+
+      if (!error) {
+        writeSessionCookie(fresh);
+        return { ok: true as const, looks: (data ?? []) as AdminLook[] };
+      }
+    } catch {
+      // fall through to anon read
+    }
+  }
+
+  const client = createSupabaseClient();
+  const { data, error } = await client
+    .from("looks")
+    .select(LOOK_COLUMNS)
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    setResponseStatus(USER_ERROR_STATUS);
+    return { ok: false as const, error: error.message, looks: [] as AdminLook[] };
+  }
+  return { ok: true as const, looks: (data ?? []) as AdminLook[] };
+});

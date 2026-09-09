@@ -1,6 +1,8 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { CATEGORIAS, PRODUTOS, type Categoria } from "@/data/products";
+import { useEffect, useState } from "react";
+import { CATEGORIAS, toProduto, type Categoria, type Produto } from "@/data/products";
 import { ProductCard } from "@/components/ProductCard";
+import { listProducts } from "@/server-functions/products";
 
 type Busca = { categoria: Categoria | "Todas" };
 
@@ -26,7 +28,26 @@ function Catalogo() {
   const { categoria } = Route.useSearch();
   const navigate = useNavigate({ from: "/catalogo" });
 
-  const filtrados = categoria === "Todas" ? PRODUTOS : PRODUTOS.filter((p) => p.categoria === categoria);
+  const [produtos, setProdutos] = useState<Produto[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let alive = true;
+    void listProducts()
+      .then((res) => {
+        if (!alive) return;
+        setProdutos(res.ok ? (res.products ?? []).map(toProduto) : []);
+        setLoading(false);
+      })
+      .catch(() => {
+        if (alive) setLoading(false);
+      });
+    return () => {
+      alive = false;
+    };
+  }, []);
+
+  const filtrados = categoria === "Todas" ? produtos : produtos.filter((p) => p.categoria === categoria);
   const filtros: Busca["categoria"][] = ["Todas", ...CATEGORIAS];
 
   return (
@@ -58,9 +79,11 @@ function Catalogo() {
         ))}
       </div>
 
-      {filtrados.length === 0 && (
+      {loading ? (
+        <p className="mt-16 text-center text-muted-foreground">Carregando catálogo…</p>
+      ) : filtrados.length === 0 ? (
         <p className="mt-16 text-center text-muted-foreground">Nenhum produto encontrado nesta categoria.</p>
-      )}
+      ) : null}
     </div>
   );
 }
