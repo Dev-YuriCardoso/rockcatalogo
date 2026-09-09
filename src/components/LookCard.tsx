@@ -3,36 +3,24 @@ import lookImg from "@/assets/look.jpg";
 
 export interface Look {
   id: string;
-  titulo: string;
-  pecas: string[];
-  precoTotal: string;
-  link: string;
+  title: string;
+  description: string | null;
+  image_url: string | null;
+  shopee_affiliate_link: string | null;
 }
 
-export const LOOKS: Look[] = [
-  {
-    id: "l1",
-    titulo: "Look Metal Clássico",
-    pecas: ["Camiseta de banda", "Calça skinny rasgada", "Pulseira de espinhos", "Coturno preto"],
-    precoTotal: "R$ 249,70",
-    link: "https://shopee.com.br",
-  },
-  {
-    id: "l2",
-    titulo: "Look Gothic Street",
-    pecas: ["Camiseta oversized", "Calça cargo com correntes", "Colar de prata", "Mochila de rebites"],
-    precoTotal: "R$ 369,60",
-    link: "https://shopee.com.br",
-  },
-];
-
 export function LookCard({ look }: { look: Look }) {
+  const pecas = (look.description ?? "")
+    .split("\n")
+    .map((p) => p.trim())
+    .filter(Boolean);
+
   return (
     <div className="group overflow-hidden rounded-xl border border-border bg-card transition-colors hover:border-primary/60">
       <div className="aspect-[4/3] overflow-hidden">
         <img
-          src={lookImg}
-          alt={look.titulo}
+          src={look.image_url || lookImg}
+          alt={look.title}
           loading="lazy"
           width={960}
           height={720}
@@ -41,15 +29,16 @@ export function LookCard({ look }: { look: Look }) {
       </div>
       <div className="flex flex-col gap-3 p-6">
         <span className="text-xs font-medium uppercase tracking-widest text-primary">Look Completo</span>
-        <h3 className="text-xl font-bold uppercase text-foreground">{look.titulo}</h3>
-        <ul className="space-y-1 text-sm text-muted-foreground">
-          {look.pecas.map((p) => (
-            <li key={p}>• {p}</li>
-          ))}
-        </ul>
-        <p className="text-lg font-bold text-foreground">{look.precoTotal} <span className="text-sm font-normal text-muted-foreground">(estimado)</span></p>
+        <h3 className="text-xl font-bold uppercase text-foreground">{look.title}</h3>
+        {pecas.length > 0 && (
+          <ul className="space-y-1 text-sm text-muted-foreground">
+            {pecas.map((p) => (
+              <li key={p}>• {p}</li>
+            ))}
+          </ul>
+        )}
         <a
-          href={look.link}
+          href={look.shopee_affiliate_link || "https://shopee.com.br"}
           target="_blank"
           rel="noopener noreferrer"
           className="mt-1 inline-flex items-center justify-center gap-2 rounded-md bg-foreground px-4 py-2.5 text-sm font-semibold text-background transition-colors hover:opacity-80"
